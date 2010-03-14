@@ -1,0 +1,30 @@
+Author: Nicolas Dufresne <nicolas.dufresne@gmail.com>
+Description: Fix division by zero in status bar when no file has to be extracted
+
+diff -Naurp squashfs-tools.orig/squashfs-tools/unsquashfs.c squashfs-tools/squashfs-tools/unsquashfs.c
+--- squashfs-tools.orig/squashfs-tools/unsquashfs.c	2009-10-02 19:26:35.000000000 +0200
++++ squashfs-tools/squashfs-tools/unsquashfs.c	2009-12-04 08:20:56.000000000 +0100
+@@ -1871,13 +1871,19 @@ void update_progress_bar()
+ 
+ void progress_bar(long long current, long long max, int columns)
+ {
++
+ 	char rotate_list[] = { '|', '/', '-', '\\' };
+-	int max_digits = floor(log10(max)) + 1;
+-	int used = max_digits * 2 + 11;
+-	int hashes = (current * (columns - used)) / max;
+-	int spaces = columns - used - hashes;
++	int max_digits, used, hashes, spaces;
+ 	static int tty = -1;
+ 
++	if (max == 0)
++		return;
++
++	max_digits = floor(log10(max)) + 1;
++	used = max_digits * 2 + 11;
++	hashes = (current * (columns - used)) / max;
++	spaces = columns - used - hashes;
++
+ 	if((current > max) || (columns - used < 0))
+ 		return;
+ 

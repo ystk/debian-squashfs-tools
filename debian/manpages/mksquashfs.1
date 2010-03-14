@@ -1,0 +1,97 @@
+.TH MKSQUASHFS 1 "2010\-03\-14" "4.0" "create and append squashfs filesystems"
+
+.SH NAME
+mksquashfs \- tool to create and append to squashfs filesystems
+
+.SH SYNOPSIS
+\fBmksquashfs\fR \fISOURCE\fR [\fISOURCE2\fR \fI...\fR] \fIDESTINATION\fR [\fIOPTIONS\fR]
+
+.SH DESCRIPTION
+Squashfs is a highly compressed read\-only filesystem for Linux. It uses zlib compression to compress both files, inodes and directories. Inodes in the system are very small and all blocks are packed to minimise data overhead. Block sizes greater than 4K are supported up to a maximum of 64K.
+.PP
+Squashfs is intended for general read\-only filesystem use, for archival use (i.e. in cases where a .tar.gz file may be used), and in constrained block device/memory systems (e.g. embedded systems) where low overhead is needed.
+
+.SH OPTIONS
+.IP "\-all\-root" 4
+make all files owned by root.
+.IP "\-always\-use\-fragments" 4
+use fragment blocks for files larger than block size.
+.IP "\-b \fIblock_size\fR" 4
+set data block to \fIblock_size\fR. Default 131072 bytes.
+.IP "-e \fIexclude\fR" 4
+list of exclude dirs/files.
+.IP "\-ef \fIexclude_file\fR" 4
+list of exclude dirs/files. One per line.
+.IP "\-force\-gid gid" 4
+set all file gids to gid.
+.IP "\-force\-uid uid" 4
+set all file uids to uid.
+.IP "\-fragment\-queue \fIsize\fR" 4
+Set fagment queue to \fIsize\fR Mbytes. Default 64 Mbytes.
+.IP "\-info" 4
+print files written to filesystem.
+.IP "\-keep\-as\-directory" 4
+if one source directory is specified, create a root directory containing that directory, rather than the contents of the directory.
+.IP "\-noappend" 4
+do not append to existing filesystem.
+.IP "\-noDataCompression" 4
+alternative name for \-noD.
+.IP "\-noD" 4
+do not compress data blocks.
+.IP "\-no\-duplicates" 4
+do not perform duplicate checking.
+.IP "\-no\-exports" 4
+don't make the filesystem exportable via NFS.
+.IP "\-noF" 4
+do not compress fragment blocks.
+.IP "\-noFragmentCompression" 4
+alternative name for \-noF.
+.IP "\-no\-fragments" 4
+do not use fragments.
+.IP "\-noI" 4
+do not compress inode table.
+.IP "\-noInodeCompression" 4
+alternative name for \-noI.
+.IP "\-nopad" 4
+do not pad filesystem to a multiple of 4K.
+.IP "\-no\-progress" 4
+don't display the progress bar.
+.IP "\-no\-recovery" 4
+don't generate a recovery file.
+.IP "\-no\-sparse" 4
+don't detect sparse files.
+.IP "\-pf \fIpseudo\-file\fR" 4
+Add list of pseudo file definitions.
+.IP "\-p \fIpseudo\-definition\fR" 4
+Add pseudo file definition.
+.IP "\-processors \fInumber\fR" 4
+Use \fInumber\fR processors. By default will use number of processors available.
+.IP "\-read\-queue \fIsize\fR" 4
+Set input queue to \fIsize\fR Mbytes. Default 64 Mbytes.
+.IP "\-recover \fIname\fR" 4
+recover filesystem data using recovery file \fIname\fR.
+.IP "\-regex" 4
+Allow POSIX regular expressions to be used in exclude dirs/files.
+.IP "\-root\-becomes \fIname\fR" 4
+when appending source files/directories, make the original root become a subdirectory in the new root called \fIname\fR, rather than adding the new source items to the original root.
+.IP "\-root\-owned" 4
+alternative name for \-all\-root.
+.IP "\-sort \fIsort_file\fR" 4
+sort files according to priorities in \fIsort_file\fR. One file or dir with priority per line. Priority \-32768 to 32767, default priority 0.
+.IP "\-version" 4
+print version, licence and copyright message.
+.IP "\-wildcards" 4
+Allow extended shell wildcards (globbing) to be used in exclude dirs/files.
+.IP "\-write\-queue \fIsize\fR" 4
+Set output queue to \fIsize\fR Mbytes. Default 512 Mbytes.
+
+.SH SEE ALSO
+unsquashfs(1)
+
+.SH HOMEPAGE
+More information about mksquashfs and the squashfs filesystem can be found at <\fIhttp://squashfs.sourceforge.net/\fR>.
+
+.SH AUTHOR
+squashfs was written by Phillip Lougher <\fIplougher@users.sourceforge.net\fR>.
+.PP
+This manual page was written by Daniel Baumann <\fIdaniel@debian.org\fR>, for the Debian project (but may be used by others).

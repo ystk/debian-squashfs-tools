@@ -1,0 +1,72 @@
+Author: Cyril Brulebois <kibi@debian.org>
+Description: Fixes FTBFS on kfreebsd (Closes: #557174).
+
+diff -Naurp squashfs-tools.orig/squashfs-tools/mksquashfs.c squashfs-tools/squashfs-tools/mksquashfs.c
+--- squashfs-tools.orig/squashfs-tools/mksquashfs.c	2009-10-02 19:26:35.000000000 +0200
++++ squashfs-tools/squashfs-tools/mksquashfs.c	2009-11-20 08:03:53.000000000 +0100
+@@ -48,7 +48,7 @@
+ #include <regex.h>
+ #include <fnmatch.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+@@ -3688,7 +3688,7 @@ void initialise_threads()
+ 	signal(SIGUSR1, sigusr1_handler);
+ 
+ 	if(processors == -1) {
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ 		int mib[2];
+ 		size_t len = sizeof(processors);
+ 
+diff -Naurp squashfs-tools.orig/squashfs-tools/read_fs.c squashfs-tools/squashfs-tools/read_fs.c
+--- squashfs-tools.orig/squashfs-tools/read_fs.c	2009-10-02 19:26:35.000000000 +0200
++++ squashfs-tools/squashfs-tools/read_fs.c	2009-11-20 08:03:53.000000000 +0100
+@@ -39,7 +39,7 @@ extern unsigned int get_guid(unsigned in
+ #include <zlib.h>
+ #include <sys/mman.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+diff -Naurp squashfs-tools.orig/squashfs-tools/swap.c squashfs-tools/squashfs-tools/swap.c
+--- squashfs-tools.orig/squashfs-tools/swap.c	2009-10-02 19:26:35.000000000 +0200
++++ squashfs-tools/squashfs-tools/swap.c	2009-11-20 08:03:53.000000000 +0100
+@@ -19,7 +19,7 @@
+  * swap.c
+  */
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+diff -Naurp squashfs-tools.orig/squashfs-tools/unsquashfs.c squashfs-tools/squashfs-tools/unsquashfs.c
+--- squashfs-tools.orig/squashfs-tools/unsquashfs.c	2009-10-02 19:26:35.000000000 +0200
++++ squashfs-tools/squashfs-tools/unsquashfs.c	2009-11-20 08:03:53.000000000 +0100
+@@ -1794,7 +1794,7 @@ void initialise_threads(int fragment_buf
+ 			"\n");
+ 
+ 	if(processors == -1) {
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ 		int mib[2];
+ 		size_t len = sizeof(processors);
+ 
+diff -Naurp squashfs-tools.orig/squashfs-tools/unsquashfs.h squashfs-tools/squashfs-tools/unsquashfs.h
+--- squashfs-tools.orig/squashfs-tools/unsquashfs.h	2009-10-02 19:26:35.000000000 +0200
++++ squashfs-tools/squashfs-tools/unsquashfs.h	2009-11-20 08:03:53.000000000 +0100
+@@ -45,7 +45,7 @@
+ #include <sys/ioctl.h>
+ #include <sys/time.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
