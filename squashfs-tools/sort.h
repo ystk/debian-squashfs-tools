@@ -4,7 +4,7 @@
 /*
  * Squashfs
  *
- * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
  * Phillip Lougher <phillip@lougher.demon.co.uk>
  *
  * This program is free software; you can redistribute it and/or
@@ -23,37 +23,6 @@
  *
  * sort.h
  */
-
-struct dir_info {
-	char			*pathname;
-	unsigned int		count;
-	unsigned int		directory_count;
-	unsigned int		current_count;
-	unsigned int		byte_count;
-	char			dir_is_ldir;
-	struct dir_ent		*dir_ent;
-	struct dir_ent		**list;
-	DIR			*linuxdir;
-};
-
-struct dir_ent {
-	char			*name;
-	char			*pathname;
-	struct inode_info	*inode;
-	struct dir_info		*dir;
-	struct dir_info		*our_dir;
-	struct old_root_entry_info *data;
-};
-
-struct inode_info {
-	unsigned int		nlink;
-	struct stat		buf;
-	squashfs_inode		inode;
-	unsigned int		type;
-	unsigned int		inode_number;
-	char			read;
-	struct inode_info	*next;
-};
 
 struct priority_entry {
 	struct dir_ent *dir;

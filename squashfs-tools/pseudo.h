@@ -1,7 +1,8 @@
 /*
- * Create a squashfs filesystem.  This is a highly compressed read only filesystem.
+ * Create a squashfs filesystem.  This is a highly compressed read only
+ * filesystem.
  *
- * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ * Copyright (c) 2009
  * Phillip Lougher <phillip@lougher.demon.co.uk>
  *
  * This program is free software; you can redistribute it and/or
@@ -27,6 +28,12 @@ struct pseudo_dev {
 	unsigned int	gid;
 	unsigned int	major;
 	unsigned int	minor;
+	int		pseudo_id;
+	int		fd;
+	int		child;
+#ifdef USE_TMP_FILE
+	char		*filename;
+#endif
 };
 
 struct pseudo_entry {
@@ -46,3 +53,5 @@ extern int read_pseudo_def(struct pseudo **, char *);
 extern int read_pseudo_file(struct pseudo **, char *);
 extern struct pseudo *pseudo_subdir(char *, struct pseudo *);
 extern struct pseudo_entry *pseudo_readdir(struct pseudo *);
+extern struct pseudo_dev *get_pseudo_file(int);
+extern void delete_pseudo_files();
