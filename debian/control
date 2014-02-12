@@ -1,18 +1,15 @@
 Source: squashfs-tools
 Section: kernel
 Priority: optional
-Maintainer: Daniel Baumann <daniel@lists.debian-maintainers.org>
-Uploaders:
- Daniel Baumann <daniel@debian.org>,
- Otavio Salvador <otavio@debian.org>
-Build-Depends: debhelper (>= 7.0.50~), quilt (>= 0.46-7), zlib1g-dev
-Standards-Version: 3.8.4
+Maintainer: Daniel Baumann <daniel.baumann@progress-technologies.net>
+Uploaders: Otavio Salvador <otavio@debian.org>
+Build-Depends:
+ debhelper (>= 9), libattr1-dev, liblzma-dev, liblzo2-dev, zlib1g-dev
+Standards-Version: 3.9.3
 Homepage: http://squashfs.sourceforge.net/
-Vcs-Browser: http://git.debian-maintainers.org/?p=daniel/squashfs-tools.git
-Vcs-Git: git://git.debian-maintainers.org/git/daniel/squashfs-tools.git
 
 Package: squashfs-tools
-Architecture: any
+Architecture: linux-any kfreebsd-any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Tool to create and append to squashfs filesystems
  Squashfs is a highly compressed read-only filesystem for Linux. It uses zlib
@@ -27,7 +24,7 @@ Description: Tool to create and append to squashfs filesystems
 Package: squashfs-tools-dbg
 Section: debug
 Priority: extra
-Architecture: any
+Architecture: linux-any kfreebsd-any
 Depends: ${misc:Depends}, squashfs-tools (= ${binary:Version})
 Description: Tool to create and append to squashfs filesystems (debug)
  Squashfs is a highly compressed read-only filesystem for Linux. It uses zlib

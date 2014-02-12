@@ -1,20 +1,101 @@
+squashfs-tools (1:4.2-5) unstable; urgency=low
+
+  * Marking binary architecture-dependend packages as linux and kfreebsd
+    only.
+  * Using compression level 9 also for binary packages.
+  * Switching to xz compression.
+  * Updating to debhelper version 9.
+  * Updating to standards version 3.9.3.
+  * Updating copyright file to format version 1.0.
+  * Adding patch from Matthieu Castet <matthieu.castet@parrot.com> to
+    make using the Pseudo operations to change the mode/uid/gid of
+    existing files with subdirectories work (Closes: #662616).
+  * Updating mksquashfs manpage (Closes: #661815).
+  * Updating unsquashfs manpage.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sat, 30 Jun 2012 13:48:39 +0200
+
+squashfs-tools (1:4.2-4) unstable; urgency=low
+
+  * Compacting copyright file.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 10 Jul 2011 17:14:11 +0200
+
+squashfs-tools (1:4.2-3) unstable; urgency=low
+
+  * Updating standards version to 3.9.2.
+  * Correcting two typos in the manpages, thanks to Yury V. Zaytsev
+    <yury@shurup.com> (Closes: #627401).
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Tue, 24 May 2011 19:00:31 +0200
+
+squashfs-tools (1:4.2-2) unstable; urgency=low
+
+  * Updating kfreebsd.patch, thanks to Jérémy Bobbio <lunar@debian.org>
+    (Closes: #623967).
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Thu, 28 Apr 2011 15:32:19 +0200
+
+squashfs-tools (1:4.2-1) unstable; urgency=low
+
+  * Merging upstream version 4.2.
+  * Updating debhelper docs file for new upstream.
+  * Updating year in copyright file.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Thu, 17 Mar 2011 15:04:48 +0100
+
+squashfs-tools (1:4.1-3) unstable; urgency=low
+
+  * Making reference to licenses in copyright distribution neutral.
+  * Improving previous changelog entries.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sat, 22 Jan 2011 21:40:48 +0100
+
+squashfs-tools (1:4.1-2) unstable; urgency=low
+
+  * Updating maintainer and uploaders fields.
+  * Removing vcs fields.
+  * Removing references to my old email address.
+  * Makeing packaging distribution neutral.
+  * Switching to source format 3.0 (quilt).
+  * Updating to debhelper version 8.
+  * Rediffing kfreebsd.patch.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 16 Jan 2011 19:28:31 +0100
+
+squashfs-tools (1:4.1-1) experimental; urgency=low
+
+  * Updating standards version to 3.9.0.
+  * Merging upstream version 4.1.
+  * Updating standards version to 3.9.1.
+  * Removing return.patch, merged upstream.
+  * Removing div-by-zero.patch, merged upstream.
+  * Rediffing cflags.patch.
+  * Adding build-depends to libattr1-dev.
+  * Updating debhelper docs file for new upstream.
+  * Including pseudo-file.example.
+  * Building with xz support (Closes: #594595).
+  * Building with lzo support.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sat, 25 Sep 2010 18:29:29 +0200
+
 squashfs-tools (1:4.0-8) unstable; urgency=low
 
   * Replacing manpages with simple ones that are actually maintainable.
   * Sorting dh call in rules to more common order.
 
- -- Daniel Baumann <daniel@debian.org>  Sun, 14 Mar 2010 15:56:28 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 14 Mar 2010 15:56:28 +0100
 
 squashfs-tools (1:4.0-7) unstable; urgency=low
 
-  * Adding explicit debian source version 1.0 until switch to 3.0.
+  * Adding explicit source version 1.0 until switch to 3.0.
   * Updating year in copyright file.
   * Updating to standards 3.8.4.
   * Applying patch from Emmet Hikory <persia@ubuntu.com> to build with -
     marm on arm to avoid using Thumb2 instructions that older kernels
     don't support.
 
- -- Daniel Baumann <daniel@debian.org>  Sun, 21 Feb 2010 18:09:41 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 21 Feb 2010 18:09:41 +0100
 
 squashfs-tools (1:4.0-6) unstable; urgency=low
 
@@ -22,7 +103,7 @@ squashfs-tools (1:4.0-6) unstable; urgency=low
   * Adding patches from Nicolas Dufresne <nicolas.dufresne@gmail.com> to
     fix some bugs in unsquashfs (Closes: #557542).
 
- -- Daniel Baumann <daniel@debian.org>  Fri, 04 Dec 2009 08:24:09 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Fri, 04 Dec 2009 08:24:09 +0100
 
 squashfs-tools (1:4.0-5) unstable; urgency=low
 
@@ -30,14 +111,14 @@ squashfs-tools (1:4.0-5) unstable; urgency=low
   * Adding patch from Cyril Brulebois <kibi@debian.org> to fix FTBFS on
     kfreebsd (Closes: #557174).
 
- -- Daniel Baumann <daniel@debian.org>  Sat, 21 Nov 2009 13:08:37 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sat, 21 Nov 2009 13:08:37 +0100
 
 squashfs-tools (1:4.0-4) unstable; urgency=low
 
   * Renaming source package to squashfs-tools for consistency.
   * Adding debug package.
 
- -- Daniel Baumann <daniel@debian.org>  Fri, 02 Oct 2009 19:35:57 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Fri, 02 Oct 2009 19:35:57 +0200
 
 squashfs (1:4.0-3) unstable; urgency=low
 
@@ -46,7 +127,7 @@ squashfs (1:4.0-3) unstable; urgency=low
   * Sorting depends.
   * Adding maintainer homepage in copyright.
 
- -- Daniel Baumann <daniel@debian.org>  Fri, 02 Oct 2009 19:17:18 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Fri, 02 Oct 2009 19:17:18 +0200
 
 squashfs (1:4.0-2) unstable; urgency=low
 
@@ -57,7 +138,7 @@ squashfs (1:4.0-2) unstable; urgency=low
   * Minimizing rules file.
   * Updating package to standards version 3.8.3.
 
- -- Daniel Baumann <daniel@debian.org>  Sat, 19 Sep 2009 15:20:31 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sat, 19 Sep 2009 15:20:31 +0200
 
 squashfs (1:4.0-1) unstable; urgency=low
 
@@ -65,22 +146,22 @@ squashfs (1:4.0-1) unstable; urgency=low
   * Installing new upstream documentation into the package.
   * Updating make calls in rules file to cope with new upstream source layout.
 
- -- Daniel Baumann <daniel@debian.org>  Mon, 06 Apr 2009 12:42:00 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Mon, 06 Apr 2009 12:42:00 +0200
 
 squashfs (1:4.0~20090405-1) unstable; urgency=low
 
   * New upstream snapshot of squashfs-tools only, squashfs-modules are
     mainlined as of 2.6.29.
-  * Redoing debian package from scratch (Closes: #485154).
+  * Redoing packaging from scratch (Closes: #485154).
   * Removing Roland from uploaders in agreement with him.
 
- -- Daniel Baumann <daniel@debian.org>  Sun, 05 Apr 2009 15:01:00 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 05 Apr 2009 15:01:00 +0200
 
 squashfs (1:3.3-7) unstable; urgency=low
 
   * Enabling patch for 2.6.25 now.
 
- -- Daniel Baumann <daniel@debian.org>  Tue, 06 May 2008 11:44:00 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Tue, 06 May 2008 11:44:00 +0200
 
 squashfs (1:3.3-6) unstable; urgency=medium
 
@@ -95,7 +176,7 @@ squashfs (1:3.3-6) unstable; urgency=medium
   * Disabling 2.6.25 patch temporarily, as this is another upload
     targeted for 2.6.24.
 
- -- Daniel Baumann <daniel@debian.org>  Thu, 10 Apr 2008 21:11:00 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Thu, 10 Apr 2008 21:11:00 +0200
 
 squashfs (1:3.3-5) unstable; urgency=high
 
@@ -107,14 +188,14 @@ squashfs (1:3.3-5) unstable; urgency=high
     - Fixing dangling symbolic links.
     Thanks to Stefan Lippers-Hollmann <s.L-H@gmx.de>.
 
- -- Daniel Baumann <daniel@debian.org>  Sat, 29 Mar 2008 09:48:00 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sat, 29 Mar 2008 09:48:00 +0100
 
 squashfs (1:3.3-4) unstable; urgency=medium
 
   * Removing squashfs-lzma support in agreement with Otavio: too broken and un-
-    maintained in Debian (Closes: #465183, #465874, #466242, #456489, #468457).
+    maintained (Closes: #465183, #465874, #466242, #456489, #468457).
 
- -- Daniel Baumann <daniel@debian.org>  Fri, 21 Mar 2008 20:37:00 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Fri, 21 Mar 2008 20:37:00 +0100
 
 squashfs (1:3.3-3) unstable; urgency=medium
 
@@ -126,27 +207,26 @@ squashfs (1:3.3-3) unstable; urgency=medium
     reasons: first, it is broken and produces corrupted images at the moment,
     and second, we would not have an upgrade path from etch to lenny with it.
   * Build-depending on gcc-4.2-hppa64 now (Closes: #463293).
-  * Removed useless whitespaces at EOF and EOL in debian/*.
+  * Removed useless whitespaces at EOF and EOL.
   * Applied patch from upstream to fix hang of mksquashfs, thanks to
     Stefan Lippers-Hollmann <s.L-H@gmx.de> (Closes: #455589).
   * Bumped package to debhelper 5, no other changes required.
   * Updated Vcs fields in control, they are official now.
   * Adding override link for module-assistant.
-  * Prefixing docs in debian with the package name they belong to for
-    consistency reasons.
+  * Prefixing docs with the package name they belong to for consistency reasons.
   * Since it is unavoidable to have the EXTRA_FLAGS in the linux-2.6/Makefile,
-    it is not required to duplicate them in debian/rules.modules.
+    it is not required to duplicate them in rules.modules.
 
- -- Daniel Baumann <daniel@debian.org>  Mon, 04 Feb 2008 22:57:00 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Mon, 04 Feb 2008 22:57:00 +0100
 
 squashfs (1:3.3-2) unstable; urgency=medium
 
   [ Daniel Baumann ]
   * Reverting 'Remove EXTRA_CFLAGS patches against module Makefile in favor of
-    debian/rules' commit and adding EXTRA_FLAGS back to the Makefile. This has
+    rules' commit and adding EXTRA_FLAGS back to the Makefile. This has
     broken linux-modules-extra-2.6 integration (Closes: #463628).
 
- -- Daniel Baumann <daniel@debian.org>  Mon, 04 Feb 2008 22:26:00 +0100
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Mon, 04 Feb 2008 22:26:00 +0100
 
 squashfs (1:3.3-1) unstable; urgency=low
 
@@ -304,7 +384,7 @@ squashfs (1:3.1r2-6.1) unstable; urgency=high
     crash on special crafted squashfs file systems CVE-2006-5701
     (Closes: #415530).
 
- -- Daniel Baumann <daniel@debian.org>  Fri, 30 Mar 2007 08:52:00 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Fri, 30 Mar 2007 08:52:00 +0200
 
 squashfs (1:3.1r2-6) unstable; urgency=low
 
@@ -391,7 +471,7 @@ squashfs (1:3.0-5.1) unstable; urgency=low
   * Bumped kernel-abi.
   * Updated flavours as of 2.6.17-2.
 
- -- Daniel Baumann <daniel@debian.org>  Sun, 09 Jul 2006 16:22:00 +0200
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 09 Jul 2006 16:22:00 +0200
 
 squashfs (1:3.0-5) unstable; urgency=low
 

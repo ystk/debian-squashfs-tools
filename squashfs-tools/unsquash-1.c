@@ -1,7 +1,8 @@
 /*
- * Unsquash a squashfs filesystem.  This is a highly compressed read only filesystem.
+ * Unsquash a squashfs filesystem.  This is a highly compressed read only
+ * filesystem.
  *
- * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ * Copyright (c) 2009, 2010
  * Phillip Lougher <phillip@lougher.demon.co.uk>
  *
  * This program is free software; you can redistribute it and/or
@@ -54,18 +55,17 @@ int read_fragment_table_1()
 
 struct inode *read_inode_1(unsigned int start_block, unsigned int offset)
 {
-	static squashfs_inode_header_1 header;
-	long long start = sBlk.inode_table_start + start_block;
+	static union squashfs_inode_header_1 header;
+	long long start = sBlk.s.inode_table_start + start_block;
 	int bytes = lookup_entry(inode_table_hash, start);
 	char *block_ptr = inode_table + bytes + offset;
 	static struct inode i;
 
 	TRACE("read_inode: reading inode [%d:%d]\n", start_block,  offset);
 
-	if(bytes == -1) {
-		ERROR("read_inode: inode table block %lld not found\n", start); 
-		return NULL;
-	}
+	if(bytes == -1)
+		EXIT_UNSQUASH("read_inode: inode table block %lld not found\n",
+			 start); 
 
 	if(swap) {
 		squashfs_base_inode_header_1 sinode;
@@ -101,9 +101,10 @@ struct inode *read_inode_1(unsigned int start_block, unsigned int offset)
 		i.type = (header.base.inode_type - 1) % SQUASHFS_TYPES + 1;
 	}
 
+	i.xattr = SQUASHFS_INVALID_XATTR;
 	i.gid = header.base.guid == 15 ? i.uid :
 		(uid_t) guid_table[header.base.guid];
-	i.time = sBlk.mkfs_time;
+	i.time = sBlk.s.mkfs_time;
 	i.inode_number = inode_number ++;
 
 	switch(i.type) {
@@ -137,8 +138,8 @@ struct inode *read_inode_1(unsigned int start_block, unsigned int offset)
 
 			i.data = inode->file_size;
 			i.time = inode->mtime;
-			i.blocks = (inode->file_size + sBlk.block_size - 1) >>
-				sBlk.block_log;
+			i.blocks = (i.data + sBlk.s.block_size - 1) >>
+				sBlk.s.block_log;
 			i.start = inode->start_block;
 			i.block_ptr = block_ptr + sizeof(*inode);
 			i.fragment = 0;
@@ -191,9 +192,9 @@ struct inode *read_inode_1(unsigned int start_block, unsigned int offset)
 			break;
 			}
 		default:
-			ERROR("Unknown inode type %d in read_inode_header_1!\n",
+			EXIT_UNSQUASH("Unknown inode type %d in "
+				" read_inode_header_1!\n",
 				header.base.inode_type);
-			return NULL;
 	}
 	return &i;
 }
@@ -203,7 +204,8 @@ struct dir *squashfs_opendir_1(unsigned int block_start, unsigned int offset,
 	struct inode **i)
 {
 	squashfs_dir_header_2 dirh;
-	char buffer[sizeof(squashfs_dir_entry_2) + SQUASHFS_NAME_LEN + 1];
+	char buffer[sizeof(squashfs_dir_entry_2) + SQUASHFS_NAME_LEN + 1]
+		__attribute__((aligned));
 	squashfs_dir_entry_2 *dire = (squashfs_dir_entry_2 *) buffer;
 	long long start;
 	int bytes;
@@ -214,27 +216,19 @@ struct dir *squashfs_opendir_1(unsigned int block_start, unsigned int offset,
 	TRACE("squashfs_opendir: inode start block %d, offset %d\n",
 		block_start, offset);
 
-	if(((*i) = s_ops.read_inode(block_start, offset)) == NULL) {
-		ERROR("squashfs_opendir: failed to read directory inode %d\n",
-			block_start);
-		return NULL;
-	}
-
-	start = sBlk.directory_table_start + (*i)->start;
+	*i = s_ops.read_inode(block_start, offset);
+	start = sBlk.s.directory_table_start + (*i)->start;
 	bytes = lookup_entry(directory_table_hash, start);
-	if(bytes == -1) {
-		ERROR("squashfs_opendir: directory block %d not found!\n",
-			block_start);
-		return NULL;
-	}
+	if(bytes == -1)
+		EXIT_UNSQUASH("squashfs_opendir: directory block %d not "
+			"found!\n", block_start);
 
 	bytes += (*i)->offset;
 	size = (*i)->data + bytes;
 
-	if((dir = malloc(sizeof(struct dir))) == NULL) {
-		ERROR("squashfs_opendir: malloc failed!\n");
-		return NULL;
-	}
+	dir = malloc(sizeof(struct dir));
+	if(dir == NULL)
+		EXIT_UNSQUASH("squashfs_opendir: malloc failed!\n");
 
 	dir->dir_count = 0;
 	dir->cur_entry = 0;
@@ -242,6 +236,7 @@ struct dir *squashfs_opendir_1(unsigned int block_start, unsigned int offset,
 	dir->uid = (*i)->uid;
 	dir->guid = (*i)->gid;
 	dir->mtime = (*i)->time;
+	dir->xattr = (*i)->xattr;
 	dir->dirs = NULL;
 
 	while(bytes < size) {			
@@ -277,13 +272,9 @@ struct dir *squashfs_opendir_1(unsigned int block_start, unsigned int offset,
 			if((dir->dir_count % DIR_ENT_SIZE) == 0) {
 				new_dir = realloc(dir->dirs, (dir->dir_count +
 					DIR_ENT_SIZE) * sizeof(struct dir_ent));
-				if(new_dir == NULL) {
-					ERROR("squashfs_opendir: realloc "
-						"failed!\n");
-					free(dir->dirs);
-					free(dir);
-					return NULL;
-				}
+				if(new_dir == NULL)
+					EXIT_UNSQUASH("squashfs_opendir: "
+						"realloc failed!\n");
 				dir->dirs = new_dir;
 			}
 			strcpy(dir->dirs[dir->dir_count].name, dire->name);
@@ -319,8 +310,8 @@ int read_uids_guids_1()
 	if(swap) {
 		unsigned int suid_table[sBlk.no_uids + sBlk.no_guids];
 
-		res = read_bytes(sBlk.uid_start, (sBlk.no_uids + sBlk.no_guids)
-			* sizeof(unsigned int), (char *) suid_table);
+		res = read_fs_bytes(fd, sBlk.uid_start, (sBlk.no_uids +
+			sBlk.no_guids) * sizeof(unsigned int), suid_table);
 		if(res == FALSE) {
 			ERROR("read_uids_guids: failed to read uid/gid table"
 				"\n");
@@ -329,8 +320,8 @@ int read_uids_guids_1()
 		SQUASHFS_SWAP_INTS_3(uid_table, suid_table,
 			sBlk.no_uids + sBlk.no_guids);
 	} else {
-		res = read_bytes(sBlk.uid_start, (sBlk.no_uids + sBlk.no_guids)
-			* sizeof(unsigned int), (char *) uid_table);
+		res = read_fs_bytes(fd, sBlk.uid_start, (sBlk.no_uids +
+			sBlk.no_guids) * sizeof(unsigned int), uid_table);
 		if(res == FALSE) {
 			ERROR("read_uids_guids: failed to read uid/gid table"
 				"\n");

@@ -1,7 +1,8 @@
 /*
- * Create a squashfs filesystem.  This is a highly compressed read only filesystem.
+ * Create a squashfs filesystem.  This is a highly compressed read only
+ * filesystem.
  *
- * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
  * Phillip Lougher <phillip@lougher.demon.co.uk>
  *
  * This program is free software; you can redistribute it and/or
@@ -34,31 +35,28 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <squashfs_fs.h>
-#include "global.h"
+#include "squashfs_fs.h"
+#include "mksquashfs.h"
 #include "sort.h"
 
 #ifdef SQUASHFS_TRACE
-#define TRACE(s, args...)		do { \
-						printf("mksquashfs: "s, ## args); \
-					} while(0)
+#define TRACE(s, args...) \
+		do { \
+			printf("mksquashfs: "s, ## args); \
+		} while(0)
 #else
 #define TRACE(s, args...)
 #endif
 
-#define INFO(s, args...)		do { \
-						if(!silent) printf("mksquashfs: "s, ## args); \
-					} while(0)
-#define ERROR(s, args...)		do { \
-						fprintf(stderr, s, ## args); \
-					} while(0)
-#define EXIT_MKSQUASHFS()		do { \
-						exit(1); \
-					} while(0)
-#define BAD_ERROR(s, args...)		do {\
-						fprintf(stderr, "FATAL ERROR:" s, ##args);\
-						EXIT_MKSQUASHFS();\
-					} while(0);
+#define INFO(s, args...) \
+		do { \
+			if(!silent) printf("mksquashfs: "s, ## args); \
+		} while(0)
+
+#define ERROR(s, args...) \
+		do { \
+			fprintf(stderr, s, ## args); \
+		} while(0)
 
 int mkisofs_style = -1;
 
@@ -140,8 +138,9 @@ re_read:
 			strncmp(path, "../", 3) == 0 || mkisofs_style == 1) {
 		if(lstat(path, &buf) == -1)
 			goto error;
-		TRACE("adding filename %s, priority %d, st_dev %llx, st_ino "
-			"%llx\n", path, priority, buf.st_dev, buf.st_ino);
+		TRACE("adding filename %s, priority %d, st_dev %d, st_ino "
+			"%lld\n", path, priority, (int) buf.st_dev,
+			(long long) buf.st_ino);
 		ADD_ENTRY(buf, priority);
 		return TRUE;
 	}
@@ -177,43 +176,61 @@ re_read:
 
 	if(n == 1)
 		return TRUE;
-	if(n > 1)
-		BAD_ERROR(" Ambiguous sortlist entry \"%s\"\n\nIt maps to more "
+	if(n > 1) {
+		ERROR(" Ambiguous sortlist entry \"%s\"\n\nIt maps to more "
 			"than one source entry!  Please use an absolute path."
 			"\n", path);
+		return FALSE;
+	}
 
 error:
-        fprintf(stderr, "Cannot stat sortlist entry \"%s\"\n", path);
-        fprintf(stderr, "This is probably because you're using the wrong file\n");
-        fprintf(stderr, "path relative to the source directories\n");
-        return FALSE;
+        ERROR("Cannot stat sortlist entry \"%s\"\n", path);
+        ERROR("This is probably because you're using the wrong file\n");
+        ERROR("path relative to the source directories\n");
+	/*
+	 * Historical note
+	 * Failure to stat a sortlist entry is deliberately ignored, even
+	 * though it is an error.  Squashfs release 2.2 changed the behaviour
+	 * to treat it as a fatal error, but it was changed back to
+	 * the original behaviour to ignore it in release 2.2-r2 following
+	 * feedback from users at the time.
+	 */
+        return TRUE;
 }
 
 
-void generate_file_priorities(struct dir_info *dir, int priority,
+int generate_file_priorities(struct dir_info *dir, int priority,
 	struct stat *buf)
 {
+	int res;
+
 	priority = get_priority(dir->pathname, buf, priority);
 
 	while(dir->current_count < dir->count) {
 		struct dir_ent *dir_ent = dir->list[dir->current_count++];
 		struct stat *buf = &dir_ent->inode->buf;
-		if(dir_ent->data)
+		if(dir_ent->inode->root_entry)
 			continue;
 
 		switch(buf->st_mode & S_IFMT) {
 			case S_IFREG:
-				add_priority_list(dir_ent,
+				res = add_priority_list(dir_ent,
 					get_priority(dir_ent->pathname, buf,
 					priority));
+				if(res == FALSE)
+					return FALSE;
 				break;
 			case S_IFDIR:
-				generate_file_priorities(dir_ent->dir, priority,
-					buf);
+				res = generate_file_priorities(dir_ent->dir,
+					priority, buf);
+				if(res == FALSE)
+					return FALSE;
 				break;
 		}
 	}
 	dir->current_count = 0;
+
+	return TRUE;
 }
 
 
@@ -221,17 +238,19 @@ int read_sort_file(char *filename, int source, char *source_path[])
 {
 	FILE *fd;
 	char sort_filename[16385];
-	int priority;
+	int res, priority;
 
 	if((fd = fopen(filename, "r")) == NULL) {
 		perror("Could not open sort_list file...");
 		return FALSE;
 	}
 	while(fscanf(fd, "%s %d", sort_filename, &priority) != EOF)
-		if(priority >= -32768 && priority <= 32767)
-			add_sort_list(sort_filename, priority, source,
+		if(priority >= -32768 && priority <= 32767) {
+			res = add_sort_list(sort_filename, priority, source,
 				source_path);
-		else
+			if(res == FALSE)
+				return FALSE;
+		} else
 			ERROR("Sort file %s, priority %d outside range of "
 				"-32767:32768 - skipping...\n", sort_filename,
 				priority);
@@ -254,6 +273,7 @@ void sort_files_and_write(struct dir_info *dir)
 				write_file(&inode, entry->dir, &duplicate_file);
 				INFO("file %s, uncompressed size %lld bytes %s"
 					"\n", entry->dir->pathname,
+					(long long)
 					entry->dir->inode->buf.st_size,
 					duplicate_file ? "DUPLICATE" : "");
 				entry->dir->inode->inode = inode;
@@ -261,6 +281,7 @@ void sort_files_and_write(struct dir_info *dir)
 			} else
 				INFO("file %s, uncompressed size %lld bytes "
 					"LINK\n", entry->dir->pathname,
+					(long long)
 					entry->dir->inode->buf.st_size);
 		}
 }

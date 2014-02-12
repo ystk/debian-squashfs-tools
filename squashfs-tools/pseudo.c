@@ -1,7 +1,8 @@
 /*
- * Create a squashfs filesystem.  This is a highly compressed read only filesystem.
+ * Create a squashfs filesystem.  This is a highly compressed read only
+ * filesystem.
  *
- * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ * Copyright (c) 2009, 2010
  * Phillip Lougher <phillip@lougher.demon.co.uk>
  *
  * This program is free software; you can redistribute it and/or
@@ -30,30 +31,40 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #include "pseudo.h"
 
 #ifdef SQUASHFS_TRACE
-#define TRACE(s, args...)		do { \
-						printf("mksquashfs: "s, ## args); \
-					} while(0)
+#define TRACE(s, args...) \
+		do { \
+			printf("mksquashfs: "s, ## args); \
+		} while(0)
 #else
 #define TRACE(s, args...)
 #endif
 
-#define ERROR(s, args...)		do { \
-						fprintf(stderr, s, ## args); \
-					} while(0)
-#define EXIT_MKSQUASHFS()		do { \
-						exit(1); \
-					} while(0)
-#define BAD_ERROR(s, args...)		do {\
-						fprintf(stderr, "FATAL ERROR:" s, ##args);\
-						EXIT_MKSQUASHFS();\
-					} while(0);
+#define ERROR(s, args...) \
+		do { \
+			fprintf(stderr, s, ## args); \
+		} while(0)
+
+#define EXIT_MKSQUASHFS() \
+		do { \
+			exit(1); \
+		} while(0)
+
+#define BAD_ERROR(s, args...) \
+		do {\
+			fprintf(stderr, "FATAL ERROR:" s, ##args);\
+			EXIT_MKSQUASHFS();\
+		} while(0);
 
 #define TRUE 1
 #define FALSE 0
+
+struct pseudo_dev **pseudo_file = NULL;
+int pseudo_count = 0;
 
 static void dump_pseudo(struct pseudo *pseudo, char *string)
 {
@@ -99,7 +110,7 @@ struct pseudo *add_pseudo(struct pseudo *pseudo, struct pseudo_dev *pseudo_dev,
 	char *target, char *alltarget)
 {
 	char targname[1024];
-	int i, error;
+	int i;
 
 	target = get_component(target, targname);
 
@@ -128,12 +139,8 @@ struct pseudo *add_pseudo(struct pseudo *pseudo, struct pseudo_dev *pseudo_dev,
 		if(target[0] == '\0') {
 			/* at leaf pathname component */
 			pseudo->name[i].pseudo = NULL;
-			pseudo->name[i].dev = malloc(sizeof(struct pseudo_dev));
-			if(pseudo->name[i].dev == NULL)
-				BAD_ERROR("failed to allocate pseudo file\n");
 			pseudo->name[i].pathname = strdup(alltarget);
-			memcpy(pseudo->name[i].dev, pseudo_dev,
-				sizeof(struct pseudo_dev));
+			pseudo->name[i].dev = pseudo_dev;
 		} else {
 			/* recurse adding child components */
 			pseudo->name[i].dev = NULL;
@@ -169,15 +176,9 @@ struct pseudo *add_pseudo(struct pseudo *pseudo, struct pseudo_dev *pseudo_dev,
 			if(target[0] == '\0') {
 				if(pseudo->name[i].dev == NULL &&
 						pseudo_dev->type == 'd') {
-					pseudo->name[i].dev =
-						malloc(sizeof(struct pseudo_dev));
-					if(pseudo->name[i].dev == NULL)
-						BAD_ERROR("failed to allocate "
-							"pseudo file\n");
 					pseudo->name[i].pathname =
 						strdup(alltarget);
-					memcpy(pseudo->name[i].dev, pseudo_dev,
-						sizeof(struct pseudo_dev));
+					pseudo->name[i].dev = pseudo_dev;
 				} else
 					ERROR("%s already exists as a "
 						"directory.  Ignoring %s!\n",
@@ -229,16 +230,113 @@ struct pseudo_entry *pseudo_readdir(struct pseudo *pseudo)
 }
 
 
+int exec_file(char *command, struct pseudo_dev *dev)
+{
+	int child, res;
+	static pid_t pid = -1;
+	int pipefd[2];
+#ifdef USE_TMP_FILE
+	char filename[1024];
+	int status;
+	static int number = 0;
+#endif
+
+	if(pid == -1)
+		pid = getpid();
+
+#ifdef USE_TMP_FILE
+	sprintf(filename, "/tmp/squashfs_pseudo_%d_%d", pid, number ++);
+	pipefd[1] = open(filename, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
+	if(pipefd[1] == -1) {
+		printf("open failed\n");
+		return -1;
+	}
+#else
+	res = pipe(pipefd);
+	if(res == -1) {
+		printf("pipe failed\n");
+		return -1;
+	}
+#endif
+
+	child = fork();
+	if(child == -1) {
+		printf("fork failed\n");
+		goto failed;
+	}
+
+	if(child == 0) {
+		close(STDOUT_FILENO);
+		res = dup(pipefd[1]);
+		if(res == -1) {
+			printf("dup failed\n");
+			exit(EXIT_FAILURE);
+		}
+		execl("/bin/sh", "sh", "-c", command, (char *) NULL);
+		printf("execl failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+#ifdef USE_TMP_FILE
+	res = waitpid(child, &status, 0);
+	close(pipefd[1]);
+	if(res != -1 && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+		dev->filename = strdup(filename);
+		return 0;
+	}
+failed:
+	unlink(filename);
+	return -1;
+#else
+	close(pipefd[1]);
+	dev->fd = pipefd[0];
+	dev->child = child;
+	return 0;
+failed:
+	return -1;
+#endif
+}
+
+
+void add_pseudo_file(struct pseudo_dev *dev)
+{
+	pseudo_file = realloc(pseudo_file, (pseudo_count + 1) *
+		sizeof(struct pseudo_dev *));
+	if(pseudo_file == NULL)
+		BAD_ERROR("Failed to realloc pseudo_file\n");
+
+	dev->pseudo_id = pseudo_count;
+	pseudo_file[pseudo_count ++] = dev;
+}
+
+
+void delete_pseudo_files()
+{
+#ifdef USE_TMP_FILE
+	int i;
+
+	for(i = 0; i < pseudo_count; i++)
+		unlink(pseudo_file[i]->filename);
+#endif
+}
+
+
+struct pseudo_dev *get_pseudo_file(int pseudo_id)
+{
+	return pseudo_file[pseudo_id];
+}
+
+
 int read_pseudo_def(struct pseudo **pseudo, char *def)
 {
-	int n;
+	int n, bytes;
 	unsigned int major = 0, minor = 0, mode;
 	char filename[2048], type, suid[100], sgid[100], *ptr;
 	long long uid, gid;
-	struct pseudo_dev dev;
+	struct pseudo_dev *dev;
 
-	n = sscanf(def, "%s %c %o %s %s %u %u", filename, &type, &mode, suid, sgid,
-			&major, &minor);
+	n = sscanf(def, "%s %c %o %s %s %n", filename, &type, &mode, suid,
+			sgid, &bytes);
 
 	if(n < 5) {
 		ERROR("Not enough or invalid arguments in pseudo file "
@@ -249,7 +347,9 @@ int read_pseudo_def(struct pseudo **pseudo, char *def)
 	switch(type) {
 	case 'b':
 	case 'c':
-		if(n < 7) {
+		n = sscanf(def + bytes,  "%u %u", &major, &minor);
+
+		if(n < 2) {
 			ERROR("Not enough or invalid arguments in pseudo file "
 				"definition\n");
 			goto error;
@@ -265,53 +365,58 @@ int read_pseudo_def(struct pseudo **pseudo, char *def)
 			goto error;
 		}
 
-		/* fall through */
-	case 'd':
-		if(mode > 0777) {
-			ERROR("Mode %o out of range\n", mode);
+	case 'f':
+		if(def[bytes] == '\0') {
+			ERROR("Not enough arguments in pseudo file "
+				"definition\n");
 			goto error;
-		}
-
-		uid = strtoll(suid, &ptr, 10);
-		if(*ptr == '\0') {
-			if(uid < 0 || uid > ((1LL << 32) - 1)) {
-				ERROR("Uid %s out of range\n", suid);
-				goto error;
-			}
-		} else {
-			struct passwd *pwuid = getpwnam(suid);
-			if(pwuid)
-				uid = pwuid->pw_uid;
-			else {
-				ERROR("Uid %s invalid uid or unknown user\n",
-					suid);
-				goto error;
-			}
-		}
-		
-		gid = strtoll(sgid, &ptr, 10);
-		if(*ptr == '\0') {
-			if(gid < 0 || gid > ((1LL << 32) - 1)) {
-				ERROR("Gid %s out of range\n", sgid);
-				goto error;
-			}
-		} else {
-			struct group *grgid = getgrnam(sgid);
-			if(grgid)
-				gid = grgid->gr_gid;
-			else {
-				ERROR("Gid %s invalid uid or unknown user\n",
-					sgid);
-				goto error;
-			}
-		}
-
+		}	
+		break;
+	case 'd':
+	case 'm':
 		break;
 	default:
 		ERROR("Unsupported type %c\n", type);
 		goto error;
 	}
 
+
+	if(mode > 07777) {
+		ERROR("Mode %o out of range\n", mode);
+		goto error;
+	}
+
+	uid = strtoll(suid, &ptr, 10);
+	if(*ptr == '\0') {
+		if(uid < 0 || uid > ((1LL << 32) - 1)) {
+			ERROR("Uid %s out of range\n", suid);
+			goto error;
+		}
+	} else {
+		struct passwd *pwuid = getpwnam(suid);
+		if(pwuid)
+			uid = pwuid->pw_uid;
+		else {
+			ERROR("Uid %s invalid uid or unknown user\n", suid);
+			goto error;
+		}
+	}
+		
+	gid = strtoll(sgid, &ptr, 10);
+	if(*ptr == '\0') {
+		if(gid < 0 || gid > ((1LL << 32) - 1)) {
+			ERROR("Gid %s out of range\n", sgid);
+			goto error;
+		}
+	} else {
+		struct group *grgid = getgrnam(sgid);
+		if(grgid)
+			gid = grgid->gr_gid;
+		else {
+			ERROR("Gid %s invalid uid or unknown user\n", sgid);
+			goto error;
+		}
+	}
 
 	switch(type) {
 	case 'b':
@@ -323,16 +428,37 @@ int read_pseudo_def(struct pseudo **pseudo, char *def)
 	case 'd':
 		mode |= S_IFDIR;
 		break;
+	case 'f':
+		mode |= S_IFREG;
+		break;
 	}
 
-	dev.type = type;
-	dev.mode = mode;
-	dev.uid = uid;
-	dev.gid = gid;
-	dev.major = major;
-	dev.minor = minor;
+	dev = malloc(sizeof(struct pseudo_dev));
+	if(dev == NULL)
+		BAD_ERROR("Failed to create pseudo_dev\n");
 
-	*pseudo = add_pseudo(*pseudo, &dev, filename, filename);
+	dev->type = type;
+	dev->mode = mode;
+	dev->uid = uid;
+	dev->gid = gid;
+	dev->major = major;
+	dev->minor = minor;
+
+	if(type == 'f') {
+		int res;
+
+		printf("Executing dynamic pseudo file\n");
+		printf("\t\"%s\"\n", def);
+		res = exec_file(def + bytes, dev);
+		if(res == -1) {
+			ERROR("Failed to execute dynamic pseudo file definition"
+				" \"%s\"\n", def);
+			return FALSE;
+		}
+		add_pseudo_file(dev);
+	}
+
+	*pseudo = add_pseudo(*pseudo, dev, filename, filename);
 
 	return TRUE;
 
@@ -342,10 +468,14 @@ error:
 }
 		
 
+
+#define MAX_LINE 2048
+
 int read_pseudo_file(struct pseudo **pseudo, char *filename)
 {
 	FILE *fd;
-	char line[2048];
+	char *line = NULL;
+	int size = 0;
 	int res = TRUE;
 
 	fd = fopen(filename, "r");
@@ -354,11 +484,41 @@ int read_pseudo_file(struct pseudo **pseudo, char *filename)
 				filename, strerror(errno));
 		return FALSE;
 	}
-	while(fscanf(fd, "%2047[^\n]\n", line) > 0) {
+
+	while(1) {
+		int total = 0;
+
+		while(1) {
+			int n, err;
+
+			if(total + MAX_LINE > size) {
+				line = realloc(line, size += MAX_LINE);
+				if(line == NULL) {
+					ERROR("No space in read_pseudo_file\n");
+					return FALSE;
+				}
+			}
+
+			err = fscanf(fd, "%2047[^\n]%n\n", line + total, &n);
+			if(err <= 0)
+				goto done;
+
+			if(line[total] == '#')
+				continue;
+
+			if(line[total + n - 1] != '\\')
+				break;
+
+			total += n - 1;
+		}	
+
 		res = read_pseudo_def(pseudo, line);
 		if(res == FALSE)
 			break;
-	};
+	}
+
+done:
 	fclose(fd);
+	free(line);
 	return res;
 }

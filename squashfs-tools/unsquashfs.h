@@ -1,7 +1,8 @@
 /*
- * Unsquash a squashfs filesystem.  This is a highly compressed read only filesystem.
+ * Unsquash a squashfs filesystem.  This is a highly compressed read only
+ * filesystem.
  *
- * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ * Copyright (c) 2009, 2010
  * Phillip Lougher <phillip@lougher.demon.co.uk>
  *
  * This program is free software; you can redistribute it and/or
@@ -31,7 +32,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <zlib.h>
 #include <sys/mman.h>
 #include <utime.h>
 #include <pwd.h>
@@ -54,34 +54,36 @@
 #endif
 
 #include "squashfs_fs.h"
-#include "global.h"
 
 #ifdef SQUASHFS_TRACE
-#define TRACE(s, args...)		do { \
-						pthread_mutex_lock(&screen_mutex); \
-						if(progress_enabled) \
-							printf("\n"); \
-						printf("unsquashfs: "s, ## args); \
-						pthread_mutex_unlock(&screen_mutex);\
-					} while(0)
+#define TRACE(s, args...) \
+		do { \
+			pthread_mutex_lock(&screen_mutex); \
+			if(progress_enabled) \
+				printf("\n"); \
+			printf("unsquashfs: "s, ## args); \
+			pthread_mutex_unlock(&screen_mutex);\
+		} while(0)
 #else
 #define TRACE(s, args...)
 #endif
 
-#define ERROR(s, args...)		do { \
-						pthread_mutex_lock(&screen_mutex); \
-						if(progress_enabled) \
-							fprintf(stderr, "\n"); \
-						fprintf(stderr, s, ## args); \
-						pthread_mutex_unlock(&screen_mutex);\
-					} while(0)
+#define ERROR(s, args...) \
+		do { \
+			pthread_mutex_lock(&screen_mutex); \
+			if(progress_enabled) \
+				fprintf(stderr, "\n"); \
+			fprintf(stderr, s, ## args); \
+			pthread_mutex_unlock(&screen_mutex);\
+		} while(0)
 
-#define EXIT_UNSQUASH(s, args...)	do { \
-						pthread_mutex_lock(&screen_mutex); \
-						fprintf(stderr, "FATAL ERROR aborting: "s, ## args); \
-						pthread_mutex_unlock(&screen_mutex);\
-						exit(1); \
-					} while(0)
+#define EXIT_UNSQUASH(s, args...) \
+		do { \
+			pthread_mutex_lock(&screen_mutex); \
+			fprintf(stderr, "FATAL ERROR aborting: "s, ## args); \
+			pthread_mutex_unlock(&screen_mutex);\
+			exit(1); \
+		} while(0)
 
 #define CALCULATE_HASH(start)	(start & 0xffff)
 
@@ -89,25 +91,7 @@
  * Unified superblock containing fields for all superblocks
  */
 struct super_block {
-	unsigned int		s_magic;
-	unsigned int		inodes;
-	unsigned int		mkfs_time;
-	unsigned int		block_size;
-	unsigned int		fragments;
-	unsigned short		compression;
-	unsigned short		block_log;
-	unsigned short		flags;
-	unsigned short		no_ids;
-	unsigned short		s_major;
-	unsigned short		s_minor;
-	squashfs_inode_t	root_inode;
-	long long		bytes_used;
-	long long		id_table_start;
-	long long		xattr_table_start;
-	long long		inode_table_start;
-	long long		directory_table_start;
-	long long		fragment_table_start;
-	long long		lookup_table_start;
+	struct squashfs_super_block s;
 	/* fields only used by squashfs 3 and earlier layouts */
 	unsigned int		no_uids;
 	unsigned int		no_guids;
@@ -137,14 +121,19 @@ struct inode {
 	int type;
 	uid_t uid;
 	char sparse;
+	unsigned int xattr;
 };
 
 typedef struct squashfs_operations {
-	struct dir *(*squashfs_opendir)(unsigned int block_start, unsigned int offset, struct inode **i);
-	void (*read_fragment)(unsigned int fragment, long long *start_block, int *size);
+	struct dir *(*squashfs_opendir)(unsigned int block_start,
+		unsigned int offset, struct inode **i);
+	void (*read_fragment)(unsigned int fragment, long long *start_block,
+		int *size);
 	int (*read_fragment_table)();
-	void (*read_block_list)(unsigned int *block_list, char *block_ptr, int blocks);
-	struct inode *(*read_inode)(unsigned int start_block, unsigned int offset);
+	void (*read_block_list)(unsigned int *block_list, char *block_ptr,
+		int blocks);
+	struct inode *(*read_inode)(unsigned int start_block,
+		unsigned int offset);
 	int (*read_uids_guids)();
 } squashfs_operations;
 
@@ -218,6 +207,7 @@ struct dir {
 	uid_t		uid;
 	gid_t		guid;
 	unsigned int	mtime;
+	unsigned int xattr;
 	struct dir_ent	*dirs;
 };
 
@@ -238,6 +228,7 @@ struct squashfs_file {
 	time_t time;
 	char *pathname;
 	char sparse;
+	unsigned int xattr;
 };
 
 struct path_entry {
@@ -262,23 +253,26 @@ extern struct super_block sBlk;
 extern squashfs_operations s_ops;
 extern int swap;
 extern char *inode_table, *directory_table;
-extern struct hash_table_entry *inode_table_hash[65536], *directory_table_hash[65536];
+extern struct hash_table_entry *inode_table_hash[65536],
+	*directory_table_hash[65536];
 extern unsigned int *uid_table, *guid_table;
 extern pthread_mutex_t screen_mutex;
 extern int progress_enabled;
 extern int inode_number;
 extern int lookup_type[];
+extern int fd;
 
 /* unsquashfs.c */
 extern int lookup_entry(struct hash_table_entry **, long long);
-extern int read_bytes(long long, int, char *);
-extern int read_block(long long, long long *, char *);
+extern int read_fs_bytes(int fd, long long, int, void *);
+extern int read_block(int, long long, long long *, void *);
 
 /* unsquash-1.c */
 extern void read_block_list_1(unsigned int *, char *, int);
 extern int read_fragment_table_1();
 extern struct inode *read_inode_1(unsigned int, unsigned int);
-extern struct dir *squashfs_opendir_1(unsigned int, unsigned int, struct inode **);
+extern struct dir *squashfs_opendir_1(unsigned int, unsigned int,
+	struct inode **);
 extern int read_uids_guids_1();
 
 /* unsquash-2.c */
@@ -291,11 +285,13 @@ extern struct inode *read_inode_2(unsigned int, unsigned int);
 extern int read_fragment_table_3();
 extern void read_fragment_3(unsigned int, long long *, int *);
 extern struct inode *read_inode_3(unsigned int, unsigned int);
-extern struct dir *squashfs_opendir_3(unsigned int, unsigned int, struct inode **);
+extern struct dir *squashfs_opendir_3(unsigned int, unsigned int,
+	struct inode **);
 
 /* unsquash-4.c */
 extern int read_fragment_table_4();
 extern void read_fragment_4(unsigned int, long long *, int *);
 extern struct inode *read_inode_4(unsigned int, unsigned int);
-extern struct dir *squashfs_opendir_4(unsigned int, unsigned int, struct inode **);
+extern struct dir *squashfs_opendir_4(unsigned int, unsigned int,
+	struct inode **);
 extern int read_uids_guids_4();

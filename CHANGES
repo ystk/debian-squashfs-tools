@@ -1,5 +1,61 @@
 			SQUASHFS CHANGE LOG
 
+4.2	28 FEB 2011	XZ compression, and compression options support
+
+	1. Filesystem improvements:
+
+	    1.1 Added XZ compression
+	    1.2 Added compression options support
+
+	2. Miscellaneous improvements/bug fixes
+
+	    1.1 Add missing NO_XATTR filesystem flag to indicate no-xattrs
+		option was specified and no xattrs should be stored when
+		appending.
+	    1.2 Add suppport in Unquashfs -stat option for displaying
+		NO_XATTR flag.
+	    1.3 Remove checkdata entry from Unsquashfs -stat option if a 4.0
+		filesystem - checkdata is no longer supported.
+	    1.4 Fix appending bug when appending to an empty filesystem - this
+		would be incorrectly treated as an error.
+	    1.5 Use glibc sys/xattr.h include rather than using attr/xattr.h
+		which isn't present by default on some distributions.
+	    1.6 Unsquashfs, fix block calculation error with regular files when
+		file size is between 2^32-block_size+1 and 2^32-1.
+	    1.7 Unsquashfs, fix sparse file writing when holes are larger than
+		2^31-1.
+	    1.8 Add external CFLAGS and LDFLAGS support to Makefile, and allow
+		build options to be specified on command line.  Also don't
+		over-write passed in CFLAGS definition.
+	
+
+4.1	19 SEPT 2010	Major filesystem and tools improvements
+
+	1. Filesystem improvements:
+
+	    1.1 Extended attribute support
+	    1.2 New compression framework
+	    1.3 Support for LZO compression
+	    1.4 Support for LZMA compression (not yet in mainline)
+
+	2. Mksquashfs improvements:
+
+	    1.1 Enhanced pseudo file support
+	    1.2 New options for choosing compression algorithm used
+	    1.3 New options for controlling extended attributes
+	    1.4 Fix misalignment issues with memcpy etc. seen on ARM
+	    1.5 Fix floating point error in progress_bar when max == 0
+	    1.6 Removed use of get_nproc() call unavailable in ulibc
+	    1.7 Reorganised help text
+	  
+	3. Unsquashfs improvements:
+
+	    1.1 New options for controlling extended attributes
+	    1.2 Fix misalignment issues with memcpy etc. seen on ARM
+	    1.3 Fix floating point error in progress_bar when max == 0
+	    1.4 Removed use of get_nproc() call unavailable in ulibc
+
+	  
 4.0	5 APR 2009	Major filesystems improvements
 
 	1. Kernel code improvements:
