@@ -1,4 +1,8 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
 
 # Workaround for older kernels not supporting Thumb2 (LP: #494667).
 ifeq ($(DEB_BUILD_ARCH_CPU),arm)
@@ -6,7 +10,7 @@ ifeq ($(DEB_BUILD_ARCH_CPU),arm)
 endif
 
 %:
-	dh ${@} --sourcedirectory=squashfs-tools
+	dh ${@}
 
 override_dh_auto_build:
 	LZO_SUPPORT=1 XZ_SUPPORT=1 dh_auto_build
@@ -15,7 +19,9 @@ override_dh_auto_install:
 	dh_auto_install -- INSTALL_DIR=$(CURDIR)/debian/squashfs-tools/usr/bin
 
 override_dh_builddeb:
-	dh_builddeb -- -Zxz -z9
+	dh_builddeb -- -Zxz
 
 override_dh_strip:
 	dh_strip --dbg-package=squashfs-tools-dbg
+
+.PHONY: override_dh_auto_build override_dh_auto_install override_dh_strip override_dh_builddeb

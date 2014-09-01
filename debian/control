@@ -1,11 +1,11 @@
 Source: squashfs-tools
 Section: kernel
 Priority: optional
-Maintainer: Daniel Baumann <daniel.baumann@progress-technologies.net>
-Uploaders: Otavio Salvador <otavio@debian.org>
+Maintainer: Filesystems Group <filesystems-devel@lists.alioth.debian.org>
+Uploaders: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Build-Depends:
  debhelper (>= 9), libattr1-dev, liblzma-dev, liblzo2-dev, zlib1g-dev
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 Homepage: http://squashfs.sourceforge.net/
 
 Package: squashfs-tools

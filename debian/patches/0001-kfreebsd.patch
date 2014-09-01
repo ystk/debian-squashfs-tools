@@ -1,0 +1,103 @@
+Author: Cyril Brulebois <kibi@debian.org>
+Description: Fixes FTBFS on kfreebsd (Closes: #557174).
+
+Index: squashfs-tools/mksquashfs.c
+===================================================================
+--- squashfs-tools.orig/mksquashfs.c	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/mksquashfs.c	2013-05-09 20:25:19.000000000 +0000
+@@ -51,7 +51,7 @@
+ #include <limits.h>
+ #include <ctype.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+@@ -4038,7 +4038,7 @@
+ 		BAD_ERROR("Failed to set signal mask in intialise_threads\n");
+ 
+ 	if(processors == -1) {
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ 		int mib[2];
+ 		size_t len = sizeof(processors);
+ 
+Index: squashfs-tools/read_fs.c
+===================================================================
+--- squashfs-tools.orig/read_fs.c	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/read_fs.c	2013-05-09 20:25:19.000000000 +0000
+@@ -34,7 +34,7 @@
+ #include <sys/mman.h>
+ #include <limits.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+Index: squashfs-tools/read_xattrs.c
+===================================================================
+--- squashfs-tools.orig/read_xattrs.c	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/read_xattrs.c	2013-05-09 20:25:19.000000000 +0000
+@@ -31,7 +31,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+Index: squashfs-tools/swap.c
+===================================================================
+--- squashfs-tools.orig/swap.c	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/swap.c	2013-05-09 20:25:19.000000000 +0000
+@@ -19,7 +19,7 @@
+  * swap.c
+  */
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+Index: squashfs-tools/unsquashfs.c
+===================================================================
+--- squashfs-tools.orig/unsquashfs.c	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/unsquashfs.c	2013-05-09 20:25:19.000000000 +0000
+@@ -2104,7 +2104,7 @@
+ 			"\n");
+ 
+ 	if(processors == -1) {
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ 		int mib[2];
+ 		size_t len = sizeof(processors);
+ 
+Index: squashfs-tools/unsquashfs.h
+===================================================================
+--- squashfs-tools.orig/unsquashfs.h	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/unsquashfs.h	2013-05-09 20:25:19.000000000 +0000
+@@ -45,7 +45,7 @@
+ #include <sys/ioctl.h>
+ #include <sys/time.h>
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
+Index: squashfs-tools/xz_wrapper.h
+===================================================================
+--- squashfs-tools.orig/xz_wrapper.h	2013-05-09 20:25:19.000000000 +0000
++++ squashfs-tools/xz_wrapper.h	2013-05-09 20:25:19.000000000 +0000
+@@ -24,7 +24,7 @@
+  *
+  */
+ 
+-#ifndef linux
++#if !defined(linux) && !defined(__GLIBC__)
+ #define __BYTE_ORDER BYTE_ORDER
+ #define __BIG_ENDIAN BIG_ENDIAN
+ #define __LITTLE_ENDIAN LITTLE_ENDIAN
