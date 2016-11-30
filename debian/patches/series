@@ -1,0 +1,4 @@
+0001-kfreebsd.patch
+0002-fix_phys_mem_calculation.patch
+0003-CVE-2015-4645_and_CVE-2015-4646.patch
+0004-unsquashfs-add-support-for-LZMA-magics.patch
