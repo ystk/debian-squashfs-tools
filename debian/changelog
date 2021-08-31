@@ -1,3 +1,11 @@
+squashfs-tools (1:4.2+20130409-2+deb8u1) jessie-security; urgency=high
+
+  * Non-maintainer upload by the ELTS Team.
+  * CVE-2021-40153
+    unsquashfs unvalidated filepaths allow writing outside of destination.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Mon, 20 Aug 2021 19:03:02 +0200
+
 squashfs-tools (1:4.2+20130409-2) unstable; urgency=low
 
   * New maintainer (closes: #723600).
